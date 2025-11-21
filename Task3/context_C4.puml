@@ -1,0 +1,14 @@
+@startuml
+
+!include <C4/C4_Context>
+
+Person(client, "Client", "Пользователь")
+System(standart, "BankingSystem", "Платформа банка Стандарт")
+System_Ext(telecom, "TelecomOperator", "Телеком-оператор")
+System_Ext(callcenter, "CallCenterPartner", "Система партнёрского кол-центра")
+
+Rel(client, standart, "Запросы к сайту и интернет-банку", "HTTP")
+Rel(standart, telecom, "Отправка СМС")
+Rel_R(standart, callcenter, "")
+
+@enduml

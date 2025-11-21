@@ -1,0 +1,42 @@
+@startuml
+
+!include <C4/C4_Container>
+
+Person(client, "Client", "Клиент банка")
+Person(clientCallCenter, "Call Center employee", "Сотрудник колл-центра банка")
+Person(extClientCallCenter, "Partner Call Center employee", "Сотрудник партнерского колл-центра")
+
+System_Boundary(platform, "Bank Standart") {
+    Container(accountService, "Account Service", "Сервис работы с депозитами ASP.NET Core")
+    ContainerDb(accountDb, "Account Database", "MS SQL")
+    Container(integrationService, "Integration Service", "Сервис интеграции с партнёрами и внешними системами")
+    ContainerDb(integrationServiceDb, "Integration Service Database", "PostgreSQL")
+    Container(callCenterFrontend, "Call Center Frontend", "Веб-приложение для сотрудников кол-центра", "React")
+    Container(callCenter, "Call Center", "Система кол-центра банка")
+    ContainerDb(callCenterDb, "Call Center Database", "PostgreSQL")
+
+    ContainerQueue(messageQueue, "Message Queue", "Kafka", "The streaming platform")
+}
+Container_Ext(extCallcenter, "CallCenterPartner", "Система партнёрского кол-центра")
+
+Rel(client, callCenter, "Звонок в кол-центр банка", "Телефония")
+Rel(client, extCallcenter, "Звонок в кол-центр банка", "Телефония")
+Rel(clientCallCenter, callCenterFrontend, "Работа с клиентскими запросами", "HTTP")
+Rel(callCenterFrontend, callCenter, "Запросы на back кол-центра", "HTTP")
+Rel(extClientCallCenter, extCallcenter, "Работа с клиентскими запросами")
+Rel(callCenter, messageQueue, "events", "Kafka")
+Rel(integrationService, messageQueue, "events", "Kafka")
+Rel(callCenter, callCenterDb, "Чтение и запись данных о звонках и клиентах", "JDBC")
+Rel(integrationService, extCallcenter, "Выгрузка файла с депозитными ставками", "SFTP")
+Rel(integrationService, integrationServiceDb, "Чтение и запись данных о внешних системах, выгрузках данных", "PostgreSQL")
+
+
+Rel(accountService, accountDb, "Чтение и запись данных о депозитах", "JDBC")
+Rel(accountService, messageQueue, "events", "Kafka")
+
+
+
+
+
+
+@enduml
