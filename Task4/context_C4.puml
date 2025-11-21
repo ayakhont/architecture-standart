@@ -1,0 +1,16 @@
+@startuml
+
+!include <C4/C4_Context>
+
+Person(client, "Client", "Клиент банка")
+System_Boundary(platform, "Платформа банка Стандарт") {
+    System(callcenter, "CallCenter", "Система кол-центра банка")
+}
+System_Ext(extCallcenter, "CallCenterPartner", "Система партнёрского кол-центра")
+
+Rel(client, callcenter, "Звонок в кол-центр банка")
+Rel(client, extCallcenter, "Звонок в кол-центр банка")
+Rel(platform, extCallcenter, "Выгрузка файла с депозитными ставками", "SFTP")
+
+
+@enduml

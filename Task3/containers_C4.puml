@@ -1,0 +1,64 @@
+@startuml
+
+!include <C4/C4_Container>
+
+Person(client, "Client", "Клиент банка")
+Person(backOfficeClient, "Back-Office Client", "Менеджер back-офиса")
+System_Boundary(monitoring, "Monitoring System") {
+    Container(prometheus, "Prometheus", "Система мониторинга и оповещений + Prometheus TSDB", "Сбор и хранение метрик")
+    Container(grafana, "Grafana", "Платформа аналитики и визуализации", "Визуализация метрик и создание дашбордов")
+}
+System_Boundary(elasticStack, "Logging System") {
+    Container(elasticSearch, "Elasticsearch", "Поисковый движок", "Хранение и поиск логов")
+    Container(logstash, "Logstash", "Система сбора и обработки логов", "Сбор, обработка и пересылка логов")
+    Container(kibana, "Kibana", "Платформа визуализации логов", "Визуализация и анализ логов")
+}
+System_Boundary(platform, "Bank Standart") {
+    Container(clientDelphi, "Delphi client", "Десктопный клиент на Delphi")
+    Container(clientFrontend, "Client web interface", "Интернет-банк ASP.NET")
+    Container(apiGateway, "API Gateway", "Маршрутизация, аутентификация, ограничение, кэширование")
+    Container(absService, "ABS Service", "Автоматизированная банковская система (АБС)")
+    ContainerDb(absServiceDb, "ABS Database", "Oracle")
+    Container(authService, "User Management and Authentication Service", "Сервис аутентификации и управления пользователями")
+    ContainerDb(userDb, "User Database", "Oracle", "БД пользователей")
+    Container(accountService, "Account Service", "Сервис работы с депозитами ASP.NET Core")
+    ContainerDb(accountDb, "Account Database", "MS SQL")
+    Container(notificationService, "Notification Service", "СМС-шлюз телеком-оператора")
+    ContainerDb(notificationDb, "Notification Database", "Oracle", "БД уведомлений")
+
+    ContainerQueue(messageQueue, "Message Queue", "Kafka", "The streaming platform")
+}
+
+Container_Ext(telecomOperator, "TelecomOperator", "Телеком-оператор")
+
+
+Rel(client, clientFrontend, "Просмотр и работа с депозитами")
+Rel(backOfficeClient, clientDelphi, "Работа с заявками на депозиты")
+
+Rel(clientFrontend, apiGateway, "client requests", "HTTP")
+Rel(clientDelphi, apiGateway, "client requests", HTTP)
+
+Rel(authService, userDb, "Чтение и запись данных пользователей", "JDBC")
+Rel(accountService, accountDb, "Чтение и запись данных о депозитах", "JDBC")
+Rel(notificationService, notificationDb, "Чтение и запись данных об уведомлениях", "JDBC")
+Rel(absService, absServiceDb, "Чтение и запись данных для согласования депозитов", "JDBC")
+
+Rel(absService, messageQueue, "events", "Kafka")
+Rel(messageQueue, notificationService, "Отправка нотификаций", "Kafka")
+Rel(accountService, messageQueue, "events", "Kafka")
+Rel(authService, messageQueue, "events", "Kafka")
+Rel(notificationService, telecomOperator, "Отправка СМС")
+
+Rel(apiGateway, authService, "Аутентификация и управление пользователями" ,"HTTP")
+Rel(apiGateway, accountService, "Работа с депозитами", "HTTP")
+Rel(apiGateway, absService, "Запросы согласования депозитов", "HTTP")
+
+Rel(grafana, prometheus, "Запрос метрик для визуализации", "HTTP")
+Rel(logstash, elasticSearch, "Индексирование логов", "HTTP")
+Rel(kibana, elasticSearch, "Запрос логов для визуализации", "HTTP")
+
+
+
+
+
+@enduml
